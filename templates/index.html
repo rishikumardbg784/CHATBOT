@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        #chatbox {
+            width: 60%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            margin-right: 20px;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+        }
+        #user-input {
+            width: 80%;
+            padding: 5px;
+            margin-top: 10px;
+            background-color: white;
+        }
+        button {
+            width: 18%;
+            padding: 5px;
+            background-color: #1483f1de;
+            color: #f9f9f9;
+            text-align: center;
+            align-items: center;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .user-message {
+            text-align: right;
+            background-color: #e0e0e0;
+            color: black;
+        }
+        .bot-message {
+            text-align: left;
+            background-color: #0da3f3;
+            color: white;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: black;
+        }
+        #history-container {
+            width: 30%;
+        }
+        #history {
+            height: 450px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            padding: 10px;
+        }
+        #history .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        #history .user-message {
+            background-color: #e0e0e0;
+        }
+        #history .bot-message {
+            background-color:  #0da3f3;
+            color: white;
+        }
+        #history-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: hsl(202, 87%, 50%);
+        }
+        #headline{
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: hsl(202, 87%, 50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="chatbox">
+            <div id="headline">CHATBOT</div>
+            <div id="messages"></div>
+            <input type="text" id="user-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div id="history-container">
+            <div id="history-title">CONVERSATION HISTORY</div>
+            <div id="history"></div>
+        </div>
+    </div>
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (!userInput) return;
+
+            const response = await fetch('/get_response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userInput })
+            });
+
+            const data = await response.json();
+            console.log(data);  // Debugging statement
+            document.getElementById('user-input').value = '';
+            updateMessages(data.history);
+        }
+
+        function updateMessages(history) {
+            const messagesContainer = document.getElementById('messages');
+            const historyContainer = document.getElementById('history');
+            messagesContainer.innerHTML = ''; // Clear previous messages
+            historyContainer.innerHTML = ''; // Clear previous history
+            history.forEach(item => {
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.innerText = `User: ${item.user}`;
+                const userTimestamp = document.createElement('div');
+                userTimestamp.className = 'timestamp';
+                userTimestamp.innerText = `Time: ${item.timestamp}`;
+                userMessage.appendChild(userTimestamp);
+                messagesContainer.appendChild(userMessage);
+
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.innerText = `Bot: ${item.bot}`;
+                const botTimestamp = document.createElement('div');
+                botTimestamp.className = 'timestamp';
+                botTimestamp.innerText = `Time: ${item.timestamp}`;
+                botMessage.appendChild(botTimestamp);
+                messagesContainer.appendChild(botMessage);
+
+                // Append to history
+                const historyUserMessage = userMessage.cloneNode(true);
+                const historyBotMessage = botMessage.cloneNode(true);
+                historyContainer.appendChild(historyUserMessage);
+                historyContainer.appendChild(historyBotMessage);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
